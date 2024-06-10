@@ -13,6 +13,7 @@ class PointsScreen extends StatefulWidget {
 
 class _PointsScreenState extends State<PointsScreen> {
   int points = 0;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -28,8 +29,12 @@ class _PointsScreenState extends State<PointsScreen> {
     if (response.statusCode == 200) {
       setState(() {
         points = jsonDecode(response.body)['pontos'];
+        isLoading = false;
       });
     } else {
+      setState(() {
+        isLoading = false;
+      });
       print('Erro ao buscar pontos');
     }
   }
@@ -38,10 +43,12 @@ class _PointsScreenState extends State<PointsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pontos Atuais'),
+        title: Text('Pontos de ${widget.username}'),
       ),
       body: Center(
-        child: Text('Pontos de ${widget.username}: $points', style: TextStyle(fontSize: 20)),
+        child: isLoading
+            ? CircularProgressIndicator()
+            : Text('Pontos: $points', style: TextStyle(fontSize: 24)),
       ),
     );
   }

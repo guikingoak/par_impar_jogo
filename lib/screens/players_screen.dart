@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'play_screen.dart';
+import 'points_screen.dart';
 
 class PlayersScreen extends StatefulWidget {
   final String currentPlayer;
@@ -91,11 +92,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => PlayScreen(
-                              username: widget.currentPlayer,
+                              currentPlayer: widget.currentPlayer,
                               opponentUsername: players[index]['username'],
-                              aposta: widget.bet,
-                              par: widget.isEven,
-                              numero: widget.number,
+                              bet: widget.bet,
+                              isEven: widget.isEven,
+                              number: widget.number,
                             ),
                           ),
                         );

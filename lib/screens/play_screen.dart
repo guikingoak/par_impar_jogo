@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'points_screen.dart';
 
 class PlayScreen extends StatefulWidget {
-  final String username;
+  final String currentPlayer;
   final String opponentUsername;
-  final int aposta;
-  final bool par;
-  final int numero;
+  final int bet;
+  final bool isEven;
+  final int number;
 
   PlayScreen({
-    required this.username,
+    required this.currentPlayer,
     required this.opponentUsername,
-    required this.aposta,
-    required this.par,
-    required this.numero,
+    required this.bet,
+    required this.isEven,
+    required this.number,
   });
 
   @override
@@ -22,71 +23,66 @@ class PlayScreen extends StatefulWidget {
 }
 
 class _PlayScreenState extends State<PlayScreen> {
-  Future<void> _makeBet() async {
-    final response = await http.post(
-      Uri.parse('https://par-impar.glitch.me/aposta'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'username': widget.username,
-        'valor': widget.aposta,
-        'parimpar': widget.par ? 2 : 1,
-        'numero': widget.numero,
-      }),
-    );
+  bool isLoading = false;
+  String resultMessage = "";
 
-    if (response.statusCode == 200) {
-      print('Aposta realizada com sucesso');
-    } else {
-      print('Erro ao realizar aposta');
-    }
-  }
+  Future<void> playGame() async {
+    setState(() {
+      isLoading = true;
+    });
 
-  Future<void> _playGame() async {
     final response = await http.get(
-      Uri.parse('https://par-impar.glitch.me/jogar/${widget.username}/${widget.opponentUsername}'),
+      Uri.parse('https://par-impar.glitch.me/jogar/${widget.currentPlayer}/${widget.opponentUsername}'),
     );
 
     if (response.statusCode == 200) {
-      final result = jsonDecode(response.body);
-      print('Resultado do jogo: ${result}');
+      final data = jsonDecode(response.body);
+      setState(() {
+        resultMessage = data['vencedor']['username'] == widget.currentPlayer
+            ? 'Você venceu!'
+            : 'Você perdeu!';
+        isLoading = false;
+      });
     } else {
-      print('Erro ao jogar');
+      setState(() {
+        resultMessage = 'Erro ao jogar';
+        isLoading = false;
+      });
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _makeBet();
+    playGame();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Jogar'),
+        title: Text('Jogo: ${widget.currentPlayer} vs ${widget.opponentUsername}'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Jogador: ${widget.username}'),
-            Text('Oponente: ${widget.opponentUsername}'),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _playGame,
-              child: Text('Jogar'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Jogar com outro oponente'),
-            ),
-          ],
-        ),
+      body: Center(
+        child: isLoading
+            ? CircularProgressIndicator()
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(resultMessage),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PointsScreen(username: widget.currentPlayer),
+                        ),
+                      );
+                    },
+                    child: Text('Ver Pontos'),
+                  ),
+                ],
+              ),
       ),
     );
   }
